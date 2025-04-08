@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,14 +20,18 @@ struct CreateUserRequest {
     username: String,
     password: String,
     email: String,
+    #[serde(rename= "alamat")]
     address: AddressRequest,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all(serialize="SCREAMING_SNAKE_CASE", deserialize="SCREAMING_SNAKE_CASE"))]
 struct User {
     username: String,
     email: String,
+    first_name: String,
     hobbies: Vec<String>,
+    phone: Option<String>,
 }
 
 fn main() {
@@ -68,6 +73,8 @@ fn test_create_json_for_create_user_request() {
     println!("{:?}", request_result);
 }
 
+
+
 #[test]
 fn test_create_json_from_array() {
     let numbers = [10, 11, 12, 13, 14, 15];
@@ -80,7 +87,9 @@ fn test_vector() {
     let request = User {
         username: "testuser".to_string(),
         email: "ekotaro@gmail.com".to_string(),
+        first_name: "ekotaro kanedo".to_string(),
         hobbies: vec!["reading".to_string(), "swimming".to_string(), "eating".to_string()],
+        phone: None,
     };
 
     let json = serde_json::to_string(&request).unwrap();
@@ -88,4 +97,35 @@ fn test_vector() {
 
     let login_result: User = serde_json::from_str(&json).unwrap();
     println!("{:?}", login_result);
+}
+
+#[test]
+fn test_vector_with_option() {
+    let request = User {
+        username: "testuser".to_string(),
+        email: "ekotaro@gmail.com".to_string(),
+        first_name: "ekotaro kanedo".to_string(),
+        hobbies: vec!["reading".to_string(), "swimming".to_string(), "eating".to_string()],
+        phone: Some("123456789".to_string()),
+    };
+
+    let json = serde_json::to_string(&request).unwrap();
+    println!("{}", json);
+
+    let login_result: User = serde_json::from_str(&json).unwrap();
+    println!("{:?}", login_result);
+}
+
+#[test]
+fn test_map() {
+    let mut values: HashMap<String, i32> = HashMap::new();
+    values.insert("one".to_string(), 1);
+    values.insert("two".to_string(), 2);
+    values.insert("three".to_string(), 3);
+
+    let json = serde_json::to_string(&values).unwrap();
+    println!("{}", json);
+
+    let result: HashMap<String, i32> = serde_json::from_str(&json).unwrap();
+    println!("{:?}", result);
 }
