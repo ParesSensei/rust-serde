@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -32,10 +33,57 @@ struct User {
     first_name: String,
     hobbies: Vec<String>,
     phone: Option<String>,
+    gender: Gender,
+    payment: Payment,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+enum Payment {
+    CreditCard {
+        card_number: String,
+        expiration: String,
+    },
+    BankAccount {
+        account_number: String,
+        bank_name: String
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+enum Gender {
+    Male,
+    Female,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Category {
+    id: String,
+    name: String,
+    #[serde(with ="chrono::serde::ts_milliseconds")]
+    created_at: DateTime<Utc>,
+    #[serde(with ="chrono::serde::ts_milliseconds")]
+    updated_at: DateTime<Utc>,
 }
 
 fn main() {
     println!("Hello, world!");
+}
+
+#[test]
+fn test_chrono() {
+    let category: Category = Category {
+        id: "gatget".to_string(),
+        name: "Gadget".to_string(),
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+    };
+
+    let json = serde_json::to_string(&category).unwrap();
+    println!("{}", json);
+
+    let result: Category = serde_json::from_str(&json).unwrap();
+    println!("{:?}", result);
 }
 
 #[test]
@@ -48,8 +96,8 @@ fn test_create_json_for_user_login_request() {
     let json = serde_json::to_string(&login_request).unwrap();
     println!("{}", json);
 
-    let login_result: UserLoginRequest = serde_json::from_str(&json).unwrap();
-    println!("{:?}", login_result);
+    let result: UserLoginRequest = serde_json::from_str(&json).unwrap();
+    println!("{:?}", result);
 }
 
 #[test]
@@ -69,8 +117,8 @@ fn test_create_json_for_create_user_request() {
     let json = serde_json::to_string(&request).unwrap();
     println!("{}", json);
 
-    let request_result: CreateUserRequest = serde_json::from_str(&json).unwrap();
-    println!("{:?}", request_result);
+    let result: CreateUserRequest = serde_json::from_str(&json).unwrap();
+    println!("{:?}", result);
 }
 
 
@@ -90,6 +138,11 @@ fn test_vector() {
         first_name: "ekotaro kanedo".to_string(),
         hobbies: vec!["reading".to_string(), "swimming".to_string(), "eating".to_string()],
         phone: None,
+        gender: Gender::Male,
+        payment: Payment::BankAccount {
+            bank_name: "Bank Bca".to_string(),
+            account_number: "123123123".to_string(),
+        }
     };
 
     let json = serde_json::to_string(&request).unwrap();
@@ -104,9 +157,14 @@ fn test_vector_with_option() {
     let request = User {
         username: "testuser".to_string(),
         email: "ekotaro@gmail.com".to_string(),
-        first_name: "ekotaro kanedo".to_string(),
+        first_name: "ekataro kanedo".to_string(),
         hobbies: vec!["reading".to_string(), "swimming".to_string(), "eating".to_string()],
         phone: Some("123456789".to_string()),
+        gender: Gender::Female,
+        payment: Payment::CreditCard {
+            card_number: "123123123".to_string(),
+            expiration: "2020-03-23".to_string(),
+        }
     };
 
     let json = serde_json::to_string(&request).unwrap();
