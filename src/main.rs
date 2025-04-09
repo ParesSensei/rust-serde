@@ -1,6 +1,9 @@
 use std::collections::HashMap;
+use std::fmt::Formatter;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{Error, Visitor};
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct UserLoginRequest {
@@ -66,7 +69,32 @@ struct Category {
     updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize)]
+struct NameVisitor;
+
+impl<'de> Visitor<'de> for NameVisitor {
+    type Value = Name;
+
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        formatter.write_str("expecting name as string")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: Error
+    {
+        let result: Vec<&str> = value.split(" ").collect();
+        if result.len() != 2 {
+            return Err(E::custom("expecting first name and last name"));
+        }
+
+        Ok(Name{
+            first: result[0].to_string(),
+            last: result[1].to_string()
+        })
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct Admin {
     id: String,
     name: Name,
@@ -87,6 +115,15 @@ impl Serialize for Name {
     }
 }
 
+impl<'de> Deserialize<'de> for Name {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>
+    {
+        deserializer.deserialize_string(NameVisitor)
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
@@ -103,6 +140,9 @@ fn test_custom_serialize() {
 
     let json: String = serde_json::to_string(&admin).unwrap();
     println!("{}", json);
+
+    let result: Admin = serde_json::from_str(&json).unwrap();
+    println!("{:?}", result);
 }
 
 #[test]
