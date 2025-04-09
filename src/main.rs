@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct UserLoginRequest {
@@ -66,8 +66,43 @@ struct Category {
     updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize)]
+struct Admin {
+    id: String,
+    name: Name,
+}
+
+#[derive(Debug)]
+struct Name {
+    first: String,
+    last: String,
+}
+
+impl Serialize for Name {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(format!("{} {}", self.first, self.last).as_str())
+    }
+}
+
 fn main() {
     println!("Hello, world!");
+}
+
+#[test]
+fn test_custom_serialize() {
+    let admin = Admin{
+        id: "admin".to_string(),
+        name: Name{
+            first: "ekotaro".to_string(),
+            last: "kuroniwa".to_string()
+        }
+    };
+
+    let json: String = serde_json::to_string(&admin).unwrap();
+    println!("{}", json);
 }
 
 #[test]
